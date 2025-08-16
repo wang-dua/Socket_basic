@@ -4,10 +4,13 @@
 #include <string>
 #include <arpa/inet.h>
 #include <iostream>
+#include <thread>
 using std::cerr;
 using std::endl;
 using std::cout;
 using std::string;
+
+void working(void* args);
 int main()
 {
    
@@ -44,20 +47,21 @@ int main()
     socklen_t addrlen = sizeof(caddr);
     // fd是先前socket bind listen 创建的监听套接字
     // cfd 是通信套接字, accept会填充客户端的IP 端口给 cfd
+
     int cfd = accept(fd, reinterpret_cast<sockaddr*>(&caddr), &addrlen);
     if (cfd == -1) {
         cerr << "accept\n";
         return -1;
     }
     // 连接成功后使用 inet_ntop(network to presentation) 打印client信息
-    //inet_ntop将二进制的信息转换为可读的形式, 将结果放置在缓冲区
+//inet_ntop将二进制的信息转换为可读的形式, 将结果放置在缓冲区
     char ip_buffer[32];
     socklen_t ip_len = sizeof(ip_buffer);
     cout << "Client IP: " << inet_ntop(AF_INET, &caddr.sin_addr.s_addr, ip_buffer, ip_len) << "\n";
     cout << "Client Port: " << ntohs(caddr.sin_port) << "\n";
 
     //5 连接成功后可以进行通信 发送 接受数据
-    while (1) {
+    while (true) {
         char buff[1024];
         int len = recv(cfd, buff, socklen_t(sizeof(buff)), 0);
         string clientMsg(buff, len);
@@ -75,6 +79,6 @@ int main()
         }
     }
 
-    close(fd);
+    close(fd); // cfd在working里关闭
     close(cfd);
 }
